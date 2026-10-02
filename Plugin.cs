@@ -12,6 +12,7 @@ namespace Freedom_Planet_2_Tails_Mod
     /* TODOs for potential updates:
     TODO: Finish the Emerald Hill based tutorial, just needs Omochao's text proofread and maybe touched up. - Mandatory for initial release.
     TODO: Check for any glaring issues in Emerald Hill's collision and patch them up. - Mandatory for initial release.
+    TODO: Actual README for the GitHub repo.
 
     TODO: Improve Super Tails, try give him the Flickies. - Medium Priority
     TODO: Actual corkscrew set up for Emerald Hill rather than just using scripted tubes. - Medium Priority
