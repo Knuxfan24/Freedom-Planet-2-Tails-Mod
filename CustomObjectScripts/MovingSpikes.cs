@@ -1,5 +1,4 @@
-﻿// TODO: Document this.
-// TODO: Add the sound.
+﻿// TODO: Add the sound.
 // TODO: Accurate timing.
 namespace Freedom_Planet_2_Tails_Mod.CustomObjectScripts
 {
@@ -13,36 +12,42 @@ namespace Freedom_Planet_2_Tails_Mod.CustomObjectScripts
 
         private new void Start()
         {
+            // Set this spike set to the idle state.
             state = State_Idle;
+
+            // Handle the FPBaseEnemy stuff.
             base.Start();
             classID = FPStage.RegisterObjectType(this, GetType(), 256);
             objectID = classID;
+
+            // Set this spike set's target Y value.
             targetY = position.y - 64;
         }
 
-        private void Update()
-        {
-            // Invoke the current state if it isn't null.
-            state?.Invoke();
-        }
+        // Invoke the current state if it isn't null.
+        private void Update() => state?.Invoke();
 
+        /// <summary>
+        /// Swaps to the moving state after 60 frames have passed.
+        /// </summary>
         private void State_Idle()
         {
             genericTimer += FPStage.deltaTime;
 
             if (genericTimer >= 60f)
-            {
                 state = State_Moving;
-            }
         }
 
         private void State_Moving()
         {
+            // Move this spike set up or down if its not at the target Y position.
             if (position.y != targetY)
             {
-                if (isUp) position.y -= 16f;
-                else position.y += 16f;
+                if (isUp) position.y -= 16f * FPStage.deltaTime;
+                else position.y += 16f * FPStage.deltaTime;
             }
+
+            // Update the target Y position, flip the isUp movement flag, reset the timer and return to the idle state.
             else
             {
                 if (isUp) targetY = position.y + 64;
