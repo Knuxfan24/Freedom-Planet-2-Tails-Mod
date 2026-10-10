@@ -943,7 +943,6 @@ namespace Freedom_Planet_2_Tails_Mod.Patchers
         
         /// <summary>
         /// Logic for the Tails Dunk attack.
-        /// TODO: Allow this to be chained?
         /// </summary>
         public static void State_Tails_TailsDunk()
         {
@@ -1576,7 +1575,6 @@ namespace Freedom_Planet_2_Tails_Mod.Patchers
 
         /// <summary>
         /// Replaces the Airship in Bakunawa Chase with the Tornado 2.
-        /// TODO: Put the custom sprite source https://www.spriters-resource.com/custom_edited/sonicthehedgehogcustoms/asset/18272/ into the README.
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PlayerShip), "Start")]
