@@ -1,21 +1,15 @@
-﻿// TODO: Document this.
-public class Coconuts : FPBaseEnemy
+﻿public class Coconuts : FPBaseEnemy
 {
-    public static int classID = -1;
-
+    private static int classID = -1;
     private float flashTime;
-
     private bool flashing;
-
-    public FPHitBox hbAttack;
+    private FPHitBox hbAttack;
+    private Animator animator;
+    private AudioClip sfxKO;
     private Renderer render;
-    [HideInInspector]
-    public Animator animator;
-    [Header("Sfx Settings")]
-    public AudioClip sfxKO;
 
-    public int targetPoint;
-    public float[] yTargets =
+    private int targetPoint;
+    private readonly float[] yTargets =
     [
         32,
         -48,
@@ -31,15 +25,19 @@ public class Coconuts : FPBaseEnemy
 
     private new void Start()
     {
+        // Set this Coconuts' health to 1.
         health = 1;
 
+        // Enable scaling so this Coconuts can be flipped if moving right.
+        useScaling = true;
+
+        // Set this Coconuts' hitboxes.
         hbWeakpoint.left = -32;
         hbWeakpoint.top = 56;
         hbWeakpoint.right = 48;
         hbWeakpoint.bottom = -32;
         hbWeakpoint.enabled = true;
         hbWeakpoint.visible = true;
-
         hbAttack.left = -16;
         hbAttack.top = 28;
         hbAttack.right = 24;
@@ -47,24 +45,28 @@ public class Coconuts : FPBaseEnemy
         hbAttack.enabled = true;
         hbAttack.visible = true;
 
+        // Increase this Coconuts' activation range.
         activationRange.x = 320;
-        useScaling = true;
 
         // Set this Coconuts' death sound and projectile animator.
         sfxKO = tailsAssetBundle.LoadAsset<AudioClip>("classic_pop");
         projectileAnimator = tailsAssetBundle.LoadAsset<RuntimeAnimatorController>("coconut projectile animator");
 
+        // Set this Coconuts to the default state.
         state = State_Default;
+
+        // Get this Coconuts' animator and renderer.
         animator = GetComponent<Animator>();
         render = GetComponentInParent<Renderer>();
+
+        // Handle the FPBaseEnemy stuff.
         base.Start();
         classID = FPStage.RegisterObjectType(this, GetType(), 0);
         objectID = classID;
 
+        // Update the Y Target Positions to be relative to this Coconuts' spawn position.
         for (int i = 0; i < yTargets.Length; i++)
-        {
             yTargets[i] += position.y;
-        }
 
     }
 
@@ -77,23 +79,16 @@ public class Coconuts : FPBaseEnemy
     private void Update()
     {
         if (invincibility > 0f)
-        {
             invincibility -= FPStage.deltaTime;
-        }
-        if (state != null)
-        {
-            state();
-        }
-        if (direction == FPDirection.FACING_LEFT)
-        {
-            scale.x = 1f;
-        }
-        else
-        {
-            scale.x = -1f;
-        }
+
+        state?.Invoke();
+
+        // These sprites face left by default, so invert the usual scaling.
+        if (direction == FPDirection.FACING_LEFT) scale.x = 1f;
+        else scale.x = -1f;
     }
 
+    // Based on the original code for the Turretus.
     private void InteractWithObjects()
     {
         FPBaseObject objRef = null;
@@ -130,6 +125,7 @@ public class Coconuts : FPBaseEnemy
         }
     }
 
+    // Copied from the original code for the Turretus.
     private void ShaderUpdate()
     {
         if (!(this != null))
@@ -154,6 +150,7 @@ public class Coconuts : FPBaseEnemy
 
     private void State_Default()
     {
+        // Find the player and turn to face them.
         FPBaseObject objRef = null;
         while (FPStage.ForEach(FPPlayer.classID, ref objRef))
         {
@@ -168,8 +165,10 @@ public class Coconuts : FPBaseEnemy
             }
         }
 
+        // Check if we're moving upwards.
         if (movingUp)
         {
+            // If we're below the target point, then set our y velocity to 2 and make sure the animator is playing.
             if (yTargets[targetPoint] > position.y)
             {
                 animator.SetSpeed(1);
@@ -177,6 +176,7 @@ public class Coconuts : FPBaseEnemy
             }
             else
             {
+                // If our target is an even numbered one, then check for the player in range and throw a coconut at them.
                 if (targetPoint % 2 == 0)
                 {
                     objRef = null;
@@ -189,14 +189,19 @@ public class Coconuts : FPBaseEnemy
                         }
                     }
                 }
+
+                // Stop our movement and animation and go to the wait to move state for the moving delay.
                 animator.SetSpeed(0);
                 velocity.y = 0;
                 genericTimer = 0;
                 state = State_WaitToMove;
             }
         }
+
+        // Check if we're moving downwards.
         else
         {
+            // If we're above the target point, then set our y velocity to -2 and make sure the animator is playing.
             if (yTargets[targetPoint] < position.y)
             {
                 animator.SetSpeed(1);
@@ -204,6 +209,7 @@ public class Coconuts : FPBaseEnemy
             }
             else
             {
+                // If our target is an even numbered one, then check for the player in range and throw a coconut at them.
                 if (targetPoint % 2 == 0)
                 {
                     objRef = null;
@@ -216,6 +222,8 @@ public class Coconuts : FPBaseEnemy
                         }
                     }
                 }
+
+                // Stop our movement and animation and go to the wait to move state for the moving delay.
                 animator.SetSpeed(0);
                 velocity.y = 0;
                 genericTimer = 0;
@@ -224,12 +232,16 @@ public class Coconuts : FPBaseEnemy
         }
 
         InteractWithObjects();
+        ShaderUpdate();
         Process360Movement();
     }
 
     private void ThrowCoconut()
     {
+        // Play the throwing animation.
         animator.Play("Throw");
+
+        // Spawn a Coconut in the correct direction.
         ProjectileBasic projectileBasic;
         if (direction == FPDirection.FACING_LEFT)
         {
@@ -254,26 +266,33 @@ public class Coconuts : FPBaseEnemy
 
     private void State_WaitToMove()
     {
+        // Increment our generic timer by the stage's delta time.
         genericTimer += FPStage.deltaTime;
 
+        // Check if the timer has reached 18.
         if (genericTimer >= 18)
         {
+            // Play the move animation again.
             animator.Play("Move");
 
+            // Either move to the next target point or loop back to 0.
             if (targetPoint == yTargets.Length - 1)
                 targetPoint = 0;
             else
                 targetPoint++;
 
+            // Set the moving direction flag.
             if (yTargets[targetPoint] > position.y)
                 movingUp = true;
             else
                 movingUp = false;
 
+            // Return to the default state.
             state = State_Default;
         }
     }
 
+    // Copied from the original code for the Turretus.
     public void State_Frozen()
     {
         if (!frozen && freezeTimer > 0f)
